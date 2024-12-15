@@ -1,16 +1,17 @@
-import sqlite3, logging, tweepy, os
-import sys
+import sqlite3, logging, tweepy, os, sys
+from dotenv import load_dotenv
+
 
 # Create and configure logger
 logging.basicConfig(filename="newfile.log", format='%(asctime)s %(message)s', filemode='w')
 # Creating an object
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 try:
-    sqliteConnection = sqlite3.connect('sql.db')
-    cursor = sqliteConnection.cursor()
+    sqlconnection = sqlite3.connect('sql.db')
+    cursor = sqlconnection.cursor()
     logger.info('Database Initialized Successfully')
 except sqlite3.Error as error:
     logger.error(f"Error while connecting to sqlite: {error}")
@@ -25,19 +26,24 @@ else:
     '''
 
     cursor.execute(create_table_query)  # Execute the SQL query
-    sqliteConnection.commit()  # Save the changes
-    logger.info("Table 'mappings' created successfully")
+    sqlconnection.commit()  # Save the changes
+    logger.info("Table 'ids' created successfully")
 
     db = cursor
 
-
-auth = tweepy.auth.OAuth2BearerHandler(os.environ['TWITTER_TOKEN'])
-twit = tweepy.API(auth)
+load_dotenv()
+twit = tweepy.Client(
+    bearer_token=os.environ['TWITTER_TOKEN'],
+    consumer_key=os.environ['TWITTER_CLINET_ID'],
+    consumer_secret=os.environ['TWITTER_CLIENT_SECRET'],
+    access_token=os.environ['TWITTER_ACCESS_TOKEN'],
+    access_token_secret=os.environ['TWITTER_ACCESS_TOKEN_SECRET']
+)
 
 
 def close(error=False):
-    db.close()
-    sqliteConnection.close()
+    if sqlconnection:
+        sqlconnection.close()
     if error is False:
         sys.exit(0)
     else:

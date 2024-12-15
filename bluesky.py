@@ -1,4 +1,4 @@
-import os, requests, sys
+import os, requests
 from dotenv import load_dotenv
 
 from lib import logger, close
