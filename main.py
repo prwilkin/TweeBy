@@ -13,20 +13,28 @@ def main():
 
     logger.debug("Bluesky Done")
 
+    # the feed is newest to oldest, but we need oldest to newest to maintain threads
+    feed.reverse()
+
     for post in feed:
         db.execute('SELECT EXISTS(SELECT 1 FROM ids WHERE blskyid = ?)', (post['post']['cid'],))
         exists = db.fetchone()[0]
         if exists:
             logger.debug("Post already exists")
-            break
+            continue
 
         text = post['post']['record']['text']
         # check for a link logic for links
         if 'embed' in post['post']['record'] and post['post']['record']['embed']['$type'] == "app.bsky.embed.external" \
                 and 'uri' in post['post']['record']['embed']['external']['uri']:
-            logger.debug("Link found")
+            logger.debug("Link found - Embeded")
             link = post['post']['record']['embed']['external']['uri']
+        elif 'facets' in post['post']['record'] and 'features' in post['post']['record']['facets'] \
+                and 'uri' in post['post']['record']['facets']['features']:
+            logger.debug("Link found - Faceted")
+            link = post['post']['record']['facets']['features']['uri']
         else:
+            logger.debug("No Link")
             link = None
 
         if len(text) > 280:
@@ -39,16 +47,16 @@ def main():
             reply = post['reply']
             if reply['root']['author']['did'] != author or reply['parent']['author']['did'] != author:
                 logger.debug("Not reply to post from Author")
-                break
+                continue
 
-            db.execute('SELECT twitid FROM ids WHERE blskyid = ?', (reply['parent']['record']['cid'],))
+            db.execute('SELECT twitid FROM ids WHERE blskyid = ?', (reply['parent']['cid'],))
             result = db.fetchone()
             resp = twit_post(text, result[0])
         else:
             logger.debug('No Reply')
             resp = twit_post(text)
 
-        logger.debug("Posted tweet" + str(resp['id'] + str(resp['text'])[:20]))
+        logger.debug("Posted tweet " + str(resp['id'] + " " + str(resp['text'])[:20]))
 
         db.execute('INSERT INTO ids (blskyid, twitid) VALUES (?, ?)', (post['post']['cid'], resp['id']))
         sqlconnection.commit()

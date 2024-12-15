@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 
 # Create and configure logger
-logging.basicConfig(filename="newfile.log", format='%(asctime)s %(message)s', filemode='w')
+logging.basicConfig(filename="main.log", format='%(asctime)s %(message)s', filemode='a')
 # Creating an object
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
