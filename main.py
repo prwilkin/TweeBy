@@ -1,7 +1,9 @@
+import os
+
 from lib import logger, db, sqlconnection
 
 from bluesky import bluesky_author, bluesky_posts
-from twit import twit_post
+from twit import twit_post, twitUi_open, twitUi_login, twitUi_post, twitUi_close
 
 
 def main():
@@ -15,6 +17,16 @@ def main():
 
     # the feed is newest to oldest, but we need oldest to newest to maintain threads
     feed.reverse()
+    # TODO: TEMP CUT
+    feed = feed[:10]
+
+    if os.environ['TWITTER_HANDLE']:
+        # open browser and page
+        logger.debug("Twitter UI is being used")
+        twitter, broswer = twitUi_open()
+        loggedIn = False
+    else:
+        logger.debug("Twitter API is being used")
 
     for post in feed:
         db.execute('SELECT EXISTS(SELECT 1 FROM ids WHERE blskyid = ?)', (post['post']['cid'],))
@@ -51,19 +63,36 @@ def main():
 
             db.execute('SELECT twitid FROM ids WHERE blskyid = ?', (reply['parent']['cid'],))
             result = db.fetchone()
-            resp = twit_post(text, result[0])
+
+            if os.environ['TWITTER_HANDLE']:
+                if not loggedIn:
+                    twitUi_login(twitter)
+                    loggedIn = True
+                resp = twitUi_post(twitter, text, result[0])
+            else:
+                resp = twit_post(text, result[0])
         else:
             logger.debug('No Reply')
-            resp = twit_post(text)
+            if os.environ['TWITTER_HANDLE']:
+                if not loggedIn:
+                    twitUi_login(twitter)
+                    loggedIn = True
+                resp = twitUi_post(twitter, text)
+            else:
+                resp = twit_post(text)
 
-        logger.debug("Posted tweet " + str(resp['id'] + " " + str(resp['text'])[:20]))
+        if os.environ['TWITTER_HANDLE']:
+            logger.debug("Posted tweet " + str(resp) + " " + str(text)[:20])
+        else:
+            logger.debug("Posted tweet " + str(resp['id'] + " " + str(resp['text'])[:20]))
+            resp = resp['id']
 
-        db.execute('INSERT INTO ids (blskyid, twitid) VALUES (?, ?)', (post['post']['cid'], resp['id']))
+        db.execute('INSERT INTO ids (blskyid, twitid) VALUES (?, ?)', (post['post']['cid'], resp))
         sqlconnection.commit()
 
         if link is not None:
             logger.debug("Link Posting")
-            resp = twit_post(link, resp['id'])
+            resp = twit_post(link, resp)
             logger.debug("Link Posted")
 
         logger.debug("Done")

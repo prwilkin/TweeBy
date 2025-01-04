@@ -34,8 +34,8 @@ else:
 load_dotenv()
 twit = tweepy.Client(
     bearer_token=os.environ['TWITTER_TOKEN'],
-    consumer_key=os.environ['TWITTER_CLINET_ID'],
-    consumer_secret=os.environ['TWITTER_CLIENT_SECRET'],
+    consumer_key=os.environ['TWITTER_CONSUMER_ID'],
+    consumer_secret=os.environ['TWITTER_CONSUMER_SECRET'],
     access_token=os.environ['TWITTER_ACCESS_TOKEN'],
     access_token_secret=os.environ['TWITTER_ACCESS_TOKEN_SECRET']
 )
