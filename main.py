@@ -18,12 +18,12 @@ def main():
     # the feed is newest to oldest, but we need oldest to newest to maintain threads
     feed.reverse()
     # TODO: TEMP CUT
-    feed = feed[:10]
+    feed = feed[-3:]
 
     if os.environ['TWITTER_HANDLE']:
         # open browser and page
         logger.debug("Twitter UI is being used")
-        twitter, broswer = twitUi_open()
+        twitter, browser, p = twitUi_open()
         loggedIn = False
     else:
         logger.debug("Twitter API is being used")
@@ -38,13 +38,13 @@ def main():
         text = post['post']['record']['text']
         # check for a link logic for links
         if 'embed' in post['post']['record'] and post['post']['record']['embed']['$type'] == "app.bsky.embed.external" \
-                and 'uri' in post['post']['record']['embed']['external']['uri']:
+                and 'uri' in post['post']['record']['embed']['external']:
             logger.debug("Link found - Embeded")
             link = post['post']['record']['embed']['external']['uri']
-        elif 'facets' in post['post']['record'] and 'features' in post['post']['record']['facets'] \
-                and 'uri' in post['post']['record']['facets']['features']:
+        elif 'facets' in post['post']['record'] and 'features' in post['post']['record']['facets'][0] \
+                and 'uri' in post['post']['record']['facets'][0]['features'][0]:
             logger.debug("Link found - Faceted")
-            link = post['post']['record']['facets']['features']['uri']
+            link = post['post']['record']['facets'][0]['features'][0]['uri']
         else:
             logger.debug("No Link")
             link = None
@@ -92,10 +92,20 @@ def main():
 
         if link is not None:
             logger.debug("Link Posting")
-            resp = twit_post(link, resp)
+            if os.environ['TWITTER_HANDLE']:
+                if not loggedIn:
+                    twitUi_login(twitter)
+                    loggedIn = True
+                resp = twitUi_post(twitter, link, resp)
+            else:
+                resp = twit_post(link, resp)
             logger.debug("Link Posted")
 
         logger.debug("Done")
+
+    logger.debug("Finished and exiting")
+    if os.environ['TWITTER_HANDLE']:
+        twitUi_close(browser, p)
 
 
 if __name__ == "__main__":

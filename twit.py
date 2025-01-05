@@ -18,6 +18,7 @@ def twitUi_open():
     logger.debug("Opening Playwright")
     p = sync_playwright().start()
     browser = p.chromium.launch(headless=True)
+    # browser = p.chromium.launch(headless=False)
     page = browser.new_page()
     return page, browser, p
 
@@ -34,15 +35,20 @@ def twitUi_login(page):
         page.goto("https://x.com/", timeout=10000)  # 10-second timeout
 
         # LOGIN
+        time.sleep(random.uniform(3, 6))
         page.get_by_test_id("loginButton").click()
+        time.sleep(random.uniform(2, 3))
         page.get_by_label("Phone, email, or username").fill(os.environ['TWITTER_HANDLE'])
+        time.sleep(random.uniform(1, 2))
         page.get_by_role("button", name="Next").click()
         time.sleep(random.uniform(3, 6))
         page.get_by_label("Password", exact=True).fill(os.environ['TWITTER_PASSWORD'])
+        time.sleep(random.uniform(1, 2))
         page.get_by_test_id("LoginForm_Login_Button").click()
 
     except PlaywrightError as e:
         logger.error(e)
+        logger.error('Url: ' + page.url)
         close(e)
 
     except PlaywrightTimeoutError:
@@ -51,6 +57,40 @@ def twitUi_login(page):
 
     else:
         logger.debug('Logged in OK')
+
+
+def checkLoggedIn(page, link):
+    x = 0
+    try:
+        while (page.get_by_label("Phone, email, or username").is_visible() or page.get_by_test_id("login").is_visible()) and x < 10:
+            logger.debug('Needs to login')
+            page.goto("https://x.com/login", timeout=10000)
+            time.sleep(random.uniform(3, 6))
+            page.get_by_label("Phone, email, or username").fill(os.environ['TWITTER_HANDLE'])
+            time.sleep(random.uniform(1, 2))
+            page.get_by_role("button", name="Next").click()
+            time.sleep(random.uniform(3, 6))
+            page.get_by_label("Password", exact=True).fill(os.environ['TWITTER_PASSWORD'])
+            time.sleep(random.uniform(1, 2))
+            page.get_by_test_id("LoginForm_Login_Button").click()
+            time.sleep(random.uniform(3, 5))
+            page.goto(link, timeout=10000)
+            time.sleep(random.uniform(4, 8))
+            x += 1
+        if x == 10:
+            raise Exception('Re-login failed when trying to tweet')
+
+    except Exception as e:
+        logger.error(e)
+
+    except PlaywrightError as e:
+        logger.error(e)
+        logger.error('Url: ' + page.url)
+        close(e)
+
+    except PlaywrightTimeoutError:
+        logger.error('Timeout on login')
+        close('Error')
 
 
 def twitUi_post(page, text: str, twitRepId=None):
@@ -63,23 +103,32 @@ def twitUi_post(page, text: str, twitRepId=None):
             page.goto("https://x.com/SCOTUSblog/status/1866852700433813805", timeout=10000)
 
             time.sleep(random.uniform(4, 8))
-            page.get_by_test_id("SideNav_NewTweet_Button").click()
-            page.get_by_test_id("tweetTextarea_0").fill(text)
+            # page.get_by_test_id("SideNav_NewTweet_Button").click()
+            # page.get_by_test_id("tweetTextarea_0").fill(text)
+
+            page.goto("https://x.com/compose/post", timeout=10000)
+            time.sleep(random.uniform(6, 8))
+
+            checkLoggedIn(page, "https://x.com/compose/post")
+
+            page.get_by_role("textbox", name="Post text").fill(text)
+
             time.sleep(random.uniform(4, 10))
             page.get_by_test_id("tweetButton").click(timeout=10000)
-            time.sleep(random.uniform(3, 6))
+            # time.sleep(random.uniform(3, 6))
             logger.debug('Tweeted out')
         else:
-            logger.debug('Replying to Tweet')
+            logger.debug(f'Replying to Tweet {twitRepId}')
             # reply to tweet
             page.goto(f'https://x.com/{os.environ['TWITTER_HANDLE']}/status/{twitRepId}', timeout=10000)  # 10-second timeout
+            time.sleep(random.uniform(6, 8))
 
-            time.sleep(random.uniform(4, 8))
-            page.get_by_test_id("reply").click()
-            page.get_by_role("textbox", name="Post text").fill(text)
+            checkLoggedIn(page, f'https://x.com/{os.environ['TWITTER_HANDLE']}/status/{twitRepId}')
+
+            page.get_by_test_id("tweetTextarea_0").fill(text)
             time.sleep(random.uniform(4, 10))
-            page.get_by_test_id("tweetButton").click(timeout=10000)
-            time.sleep(random.uniform(5, 8))
+            page.get_by_test_id("tweetButtonInline").click(timeout=10000)
+            # time.sleep(random.uniform(5, 8))
             logger.debug('Tweeted out')
 
         page.get_by_test_id("toast").locator("a").click()
@@ -88,10 +137,11 @@ def twitUi_post(page, text: str, twitRepId=None):
 
     except PlaywrightError as e:
         logger.error(e)
+        logger.error('Url: ' + page.url)
         close(e)
 
     except PlaywrightTimeoutError:
-        logger.error('Timeout on login')
+        logger.error('Timeout on Post')
         close('Error')
 
     else:
