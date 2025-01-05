@@ -17,8 +17,8 @@ def main():
 
     # the feed is newest to oldest, but we need oldest to newest to maintain threads
     feed.reverse()
-    # TODO: TEMP CUT
-    feed = feed[-3:]
+    # TEMP CUT
+    # feed = feed[-3:]
 
     if os.environ['TWITTER_HANDLE']:
         # open browser and page
