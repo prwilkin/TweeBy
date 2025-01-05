@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 logging.basicConfig(filename="main.log", format='%(asctime)s %(message)s', filemode='a')
 # Creating an object
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 try:

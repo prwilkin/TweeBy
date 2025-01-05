@@ -82,9 +82,9 @@ def main():
                 resp = twit_post(text)
 
         if os.environ['TWITTER_HANDLE']:
-            logger.debug("Posted tweet " + str(resp) + " " + str(text)[:20])
+            logger.info("Posted tweet " + str(resp) + " " + str(text)[:20])
         else:
-            logger.debug("Posted tweet " + str(resp['id'] + " " + str(resp['text'])[:20]))
+            logger.info("Posted tweet " + str(resp['id'] + " " + str(resp['text'])[:20]))
             resp = resp['id']
 
         db.execute('INSERT INTO ids (blskyid, twitid) VALUES (?, ?)', (post['post']['cid'], resp))
