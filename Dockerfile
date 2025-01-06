@@ -20,9 +20,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create a cron job file
-RUN echo "*/5 * * * * python /app/main.py >> /var/log/cron.log 2>&1" > /etc/cron.d/my-cron-job && \
+RUN echo "*/1 * * * * python /app/main.py >> /var/log/cron.log 2>&1" > /etc/cron.d/my-cron-job && \
     chmod 0644 /etc/cron.d/my-cron-job && \
-    crontab /etc/cron.d/my-cron-job
+    crontab /etc/cron.d/my-cron-job && \
+    touch /var/log/cron.log
 
-# Ensure cron is started in the foreground with the Python script
+# Ensure cron is started and tail the log for visibility
 CMD service cron start && tail -f /var/log/cron.log
