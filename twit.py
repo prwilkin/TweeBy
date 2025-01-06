@@ -6,12 +6,18 @@ from lib import logger, twit, close
 
 def twit_post(text: str, twitRepId=None):
     try:
-        resp = twit.create_tweet(text=text, in_reply_to_tweet_id=twitRepId)
+        if os.environ['TWITTER_API_VERSION']:
+            # version 2
+            resp = twit.apiV2.create_tweet(text=text, in_reply_to_tweet_id=twitRepId)
+            resp = resp.data
+        # else:
+        #     # version 1
+        #     resp = twit.apiV1.update_status(text, in_reply_to_tweet_id=twitRepId)
     except tweepy.errors.TweepyException as e:
         logger.error(e)
         close(e)
     else:
-        return resp.data
+        return resp
 
 
 def twitUi_open():
