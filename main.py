@@ -17,11 +17,11 @@ def main():
 
     # the feed is newest to oldest, but we need oldest to newest to maintain threads
     feed.reverse()
-    # TODO: TEMP CUT FOR DEBUG
+    # TEMP CUT FOR DEBUG
     # feed = feed[-3:]
 
     # for preventing getting rate limited on an existing account, gets the 10 most recent
-    # feed = feed[-10:]
+    feed = feed[-10:]
 
     if os.environ['TWITTER_HANDLE']:
         # open browser and page
