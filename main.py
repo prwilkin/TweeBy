@@ -110,6 +110,7 @@ def main():
     if os.environ['TWITTER_HANDLE']:
         twitUi_close(browser, p)
     logger.debug("Finished and exiting\n\n")
+    print("Finished and exiting")
 
 
 if __name__ == "__main__":

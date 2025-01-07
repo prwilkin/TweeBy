@@ -10,7 +10,7 @@ logger.setLevel(logging.DEBUG)
 
 
 try:
-    sqlconnection = sqlite3.connect('sql.db')
+    sqlconnection = sqlite3.connect('data/sql.db')
     cursor = sqlconnection.cursor()
     logger.info('Database Initialized Successfully')
 except sqlite3.Error as error:

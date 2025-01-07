@@ -1,5 +1,5 @@
 # project related ones
-sql.db
+data/sql.db
 
 
 # Byte-compiled / optimized / DLL files

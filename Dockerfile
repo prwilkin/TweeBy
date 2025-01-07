@@ -4,11 +4,12 @@ FROM python:3.12-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Install cron and Python dependencies
-RUN apt-get update && \
-    apt-get install -y cron && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Create the data directory and copy all files from the local data directory
+RUN mkdir -p /data && chmod 777 /data
+COPY data/. /data/
+
+# Define a persistent volume for the SQLite database
+VOLUME ["/data"]
 
 # Copy the requirements file into the container
 COPY requirements.txt .
@@ -19,11 +20,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code
 COPY . .
 
-# Create a cron job file
-RUN echo "*/1 * * * * python /app/main.py >> /var/log/cron.log 2>&1" > /etc/cron.d/my-cron-job && \
-    chmod 0644 /etc/cron.d/my-cron-job && \
-    crontab /etc/cron.d/my-cron-job && \
-    touch /var/log/cron.log
-
-# Ensure cron is started and tail the log for visibility
-CMD service cron start && tail -f /var/log/cron.log
+# Run the script and keep the container running with sleep
+CMD python3 /app/main.py && tail -f /dev/null
