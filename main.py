@@ -17,8 +17,11 @@ def main():
 
     # the feed is newest to oldest, but we need oldest to newest to maintain threads
     feed.reverse()
-    # TEMP CUT
+    # TEMP CUT FOR DEBUG
     # feed = feed[-3:]
+
+    # for preventing getting rate limited on an existing account, gets the 10 most recent
+    feed = feed[-10:]
 
     if os.environ['TWITTER_HANDLE']:
         # open browser and page
@@ -91,21 +94,23 @@ def main():
         sqlconnection.commit()
 
         if link is not None:
-            logger.debug("Link Posting")
-            if os.environ['TWITTER_HANDLE']:
-                if not loggedIn:
-                    twitUi_login(twitter)
-                    loggedIn = True
-                resp = twitUi_post(twitter, link, resp)
-            else:
-                resp = twit_post(link, resp)
-            logger.debug("Link Posted")
+            logger.info("Link posting is presently disabled")
+            # logger.debug("Link Posting")
+            # if os.environ['TWITTER_HANDLE']:
+            #     if not loggedIn:
+            #         twitUi_login(twitter)
+            #         loggedIn = True
+            #     resp = twitUi_post(twitter, link, resp)
+            # else:
+            #     resp = twit_post(link, resp)
+            # logger.debug("Link Posted")
 
         logger.debug("Done")
 
-    logger.debug("Finished and exiting")
     if os.environ['TWITTER_HANDLE']:
         twitUi_close(browser, p)
+    logger.debug("Finished and exiting\n\n")
+    print("Finished and exiting")
 
 
 if __name__ == "__main__":

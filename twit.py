@@ -6,19 +6,25 @@ from lib import logger, twit, close
 
 def twit_post(text: str, twitRepId=None):
     try:
-        resp = twit.create_tweet(text=text, in_reply_to_tweet_id=twitRepId)
+        # if os.environ['TWITTER_API_VERSION']:
+            # version 2
+            resp = twit.apiV2.create_tweet(text=text, in_reply_to_tweet_id=twitRepId)
+            resp = resp.data
+        # else:
+        #     # version 1
+        #     resp = twit.apiV1.update_status(text, in_reply_to_tweet_id=twitRepId)
     except tweepy.errors.TweepyException as e:
         logger.error(e)
         close(e)
     else:
-        return resp.data
+        return resp
 
 
 def twitUi_open():
     logger.debug("Opening Playwright")
     p = sync_playwright().start()
     browser = p.chromium.launch(headless=True)
-    # browser = p.chromium.launch(headless=False)
+    # browser = p.chromium.launch(headless=False)   # for debugging
     page = browser.new_page()
     return page, browser, p
 
@@ -91,6 +97,8 @@ def checkLoggedIn(page, link):
     except PlaywrightTimeoutError:
         logger.error('Timeout on login')
         close('Error')
+    else:
+        logger.debug("Re-logged in")
 
 
 def twitUi_post(page, text: str, twitRepId=None):
@@ -114,7 +122,19 @@ def twitUi_post(page, text: str, twitRepId=None):
             page.get_by_role("textbox", name="Post text").fill(text)
 
             time.sleep(random.uniform(4, 10))
-            page.get_by_test_id("tweetButton").click(timeout=10000)
+
+            # getting stuck on odd popups sometimes
+            # if page.locator("#layers > div:nth-child(2) > div > div > div").is_visible():
+            #     page.locator("#layers > div:nth-child(2) > div > div > div").first.click()
+            #     logger.debug('Clicked background')
+            # if not page.get_by_test_id("tweetButton").is_visible():
+            #     page.mouse.click(1, 1)
+            #     logger.debug('Clicked at 1, 1 for pop up')
+            page.mouse.click(1, 1)
+            if page.get_by_test_id("confirmationSheetDialog").is_visible():
+                page.mouse.click(1, 1)
+
+            page.get_by_test_id("tweetButton").click(force=True, timeout=10000)
             # time.sleep(random.uniform(3, 6))
             logger.debug('Tweeted out')
         else:
@@ -127,7 +147,14 @@ def twitUi_post(page, text: str, twitRepId=None):
 
             page.get_by_test_id("tweetTextarea_0").fill(text)
             time.sleep(random.uniform(4, 10))
-            page.get_by_test_id("tweetButtonInline").click(timeout=10000)
+            # if page.locator("#layers > div:nth-child(2) > div > div > div").is_visible():
+            #     page.locator("#layers > div:nth-child(2) > div > div > div").first.click()
+            #     logger.debug('Clicked background')
+            # if not page.get_by_test_id("tweetButtonInline").is_visible():
+            #     page.mouse.click(1, 1)
+            #     logger.debug('Clicked at 1, 1 for pop up')
+            page.mouse.click(1, 1)
+            page.get_by_test_id("tweetButtonInline").click(force=True, timeout=10000)
             # time.sleep(random.uniform(5, 8))
             logger.debug('Tweeted out')
 
