@@ -1,4 +1,4 @@
-import os
+import os, re
 
 from lib import logger, db, sqlconnection
 
@@ -39,15 +39,31 @@ def main():
             continue
 
         text = post['post']['record']['text']
+
+        # Regex to match URLs including "www."
+        url_pattern = r'(?:https?://|www\.)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:[/?#][^\s]*)?'
+
         # check for a link logic for links
         if 'embed' in post['post']['record'] and post['post']['record']['embed']['$type'] == "app.bsky.embed.external" \
                 and 'uri' in post['post']['record']['embed']['external']:
             logger.debug("Link found - Embeded")
             link = post['post']['record']['embed']['external']['uri']
+            logger.debug(f"Old Text: {text}")
+            text = re.sub(url_pattern, '', text).strip()
+            logger.debug(f"New Text: {text}")
         elif 'facets' in post['post']['record'] and 'features' in post['post']['record']['facets'][0] \
                 and 'uri' in post['post']['record']['facets'][0]['features'][0]:
             logger.debug("Link found - Faceted")
             link = post['post']['record']['facets'][0]['features'][0]['uri']
+            logger.debug(f"Old Text: {text}")
+            text = re.sub(url_pattern, '', text).strip()
+            logger.debug(f"New Text: {text}")
+        elif re.findall(url_pattern, text):
+            logger.debug("Link found - regex")
+            link = re.findall(url_pattern, text)[0]
+            logger.debug(f"Old Text: {text}")
+            text = re.sub(url_pattern, '', text).strip()
+            logger.debug(f"New Text: {text}")
         else:
             logger.debug("No Link")
             link = None
