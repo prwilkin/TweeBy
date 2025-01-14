@@ -21,4 +21,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Run the script and keep the container running with sleep
-CMD python3 /app/main.py && tail -f /dev/null
+CMD python3 /app/main.py & tail -f /dev/null
