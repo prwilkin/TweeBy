@@ -14,7 +14,18 @@ def twit_post(text: str, twitRepId=None):
         #     # version 1
         #     resp = twit.apiV1.update_status(text, in_reply_to_tweet_id=twitRepId)
     except tweepy.errors.TweepyException as e:
-        logger.error(e)
+        logger.error(
+            f"Tweepy Exception: {e}\n"
+            f"Request Payload: {{'text': {text}, 'in_reply_to_tweet_id': {twitRepId}}}\n"
+            f"API Endpoint: apiV2.create_tweet"
+        )
+        close(e)
+    except Exception as e:
+        logger.error(
+            f"Unexpected Error: {e}\n"
+            f"Request Payload: {{'text': {text}, 'in_reply_to_tweet_id': {twitRepId}}}\n"
+            f"API Endpoint: apiV2.create_tweet"
+        )
         close(e)
     else:
         return resp
