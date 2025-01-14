@@ -12,7 +12,7 @@ logger.setLevel(logging.INFO)
 try:
     sqlconnection = sqlite3.connect('data/sql.db')
     cursor = sqlconnection.cursor()
-    logger.info('Database Initialized Successfully')
+    logger.debug('Database Initialized Successfully')
 except sqlite3.Error as error:
     logger.error(f"Error while connecting to sqlite: {error}")
 else:
@@ -27,7 +27,7 @@ else:
 
     cursor.execute(create_table_query)  # Execute the SQL query
     sqlconnection.commit()  # Save the changes
-    logger.info("Table 'ids' created successfully")
+    logger.debug("Table 'ids' created successfully")
 
     db = cursor
 
