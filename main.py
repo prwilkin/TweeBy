@@ -23,7 +23,7 @@ def main():
     # for preventing getting rate limited on an existing account, gets the 10 most recent
     feed = feed[-10:]
 
-    if os.environ['TWITTER_HANDLE']:
+    if os.environ['UI_POSTING']:
         # open browser and page
         logger.debug("Twitter UI is being used")
         twitter, browser, p = twitUi_open()
@@ -83,7 +83,7 @@ def main():
             db.execute('SELECT twitid FROM ids WHERE blskyid = ?', (reply['parent']['cid'],))
             result = db.fetchone()
 
-            if os.environ['TWITTER_HANDLE']:
+            if os.environ['UI_POSTING']:
                 if not loggedIn:
                     twitUi_login(twitter)
                     loggedIn = True
@@ -92,7 +92,7 @@ def main():
                 resp = twit_post(text, result[0])
         else:
             logger.debug('No Reply')
-            if os.environ['TWITTER_HANDLE']:
+            if os.environ['UI_POSTING']:
                 if not loggedIn:
                     twitUi_login(twitter)
                     loggedIn = True
@@ -100,7 +100,7 @@ def main():
             else:
                 resp = twit_post(text)
 
-        if os.environ['TWITTER_HANDLE']:
+        if os.environ['UI_POSTING']:
             logger.info("Posted tweet " + str(resp) + " " + str(text)[:20])
         else:
             logger.info("Posted tweet " + str(resp['id'] + " " + str(resp['text'])[:20]))
@@ -110,20 +110,22 @@ def main():
         sqlconnection.commit()
 
         if link is not None:
-            logger.info("Link posting is presently disabled")
-            # logger.debug("Link Posting")
-            # if os.environ['TWITTER_HANDLE']:
-            #     if not loggedIn:
-            #         twitUi_login(twitter)
-            #         loggedIn = True
-            #     resp = twitUi_post(twitter, link, resp)
-            # else:
-            #     resp = twit_post(link, resp)
-            # logger.debug("Link Posted")
+            if os.environ['LINK_POSTING']:
+                logger.debug("Link Posting")
+                if os.environ['UI_POSTING']:
+                    if not loggedIn:
+                        twitUi_login(twitter)
+                        loggedIn = True
+                    resp = twitUi_post(twitter, link, resp)
+                else:
+                    resp = twit_post(link, resp)
+                logger.debug("Link Posted")
+            else:
+                logger.info("Link posting is presently disabled")
 
         logger.debug("Done")
 
-    if os.environ['TWITTER_HANDLE']:
+    if os.environ['UI_POSTING']:
         twitUi_close(browser, p)
     logger.debug("Finished and exiting\n\n")
     print("Finished and exiting")
