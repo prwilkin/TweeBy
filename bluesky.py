@@ -46,3 +46,5 @@ def bluesky_posts(did):
     except requests.exceptions.RequestException as e:
         logger.error(f"Request Error: {e}\nURL: {url+'/xrpc/app.bsky.feed.getAuthorFeed'}")
         close(True)
+    else:
+        return resp.json()['feed']
