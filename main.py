@@ -23,7 +23,7 @@ def main():
     # for preventing getting rate limited on an existing account, gets the 10 most recent
     feed = feed[-10:]
 
-    if os.environ['UI_POSTING']:
+    if os.environ.get('UI_POSTINGG', '').lower() in ['1', 'true', 'yes']:
         # open browser and page
         logger.debug("Twitter UI is being used")
         twitter, browser, p = twitUi_open()
@@ -83,7 +83,7 @@ def main():
             db.execute('SELECT twitid FROM ids WHERE blskyid = ?', (reply['parent']['cid'],))
             result = db.fetchone()
 
-            if os.environ['UI_POSTING']:
+            if os.environ.get('UI_POSTING', '').lower() in ['1', 'true', 'yes']:
                 if not loggedIn:
                     twitUi_login(twitter)
                     loggedIn = True
@@ -92,7 +92,7 @@ def main():
                 resp = twit_post(text, result[0])
         else:
             logger.debug('No Reply')
-            if os.environ['UI_POSTING']:
+            if os.environ.get('UI_POSTING', '').lower() in ['1', 'true', 'yes']:
                 if not loggedIn:
                     twitUi_login(twitter)
                     loggedIn = True
@@ -100,7 +100,7 @@ def main():
             else:
                 resp = twit_post(text)
 
-        if os.environ['UI_POSTING']:
+        if os.environ.get('UI_POSTING', '').lower() in ['1', 'true', 'yes']:
             logger.info("Posted tweet " + str(resp) + " " + str(text)[:20])
         else:
             logger.info("Posted tweet " + str(resp['id'] + " " + str(resp['text'])[:20]))
@@ -110,9 +110,9 @@ def main():
         sqlconnection.commit()
 
         if link is not None:
-            if os.environ['LINK_POSTING']:
+            if os.environ.get('LINK_POSTING', '').lower() in ['1', 'true', 'yes']:
                 logger.debug("Link Posting")
-                if os.environ['UI_POSTING']:
+                if os.environ.get('UI_POSTING', '').lower() in ['1', 'true', 'yes']:
                     if not loggedIn:
                         twitUi_login(twitter)
                         loggedIn = True
@@ -125,7 +125,7 @@ def main():
 
         logger.debug("Done")
 
-    if os.environ['UI_POSTING']:
+    if os.environ.get('UI_POSTING', '').lower() in ['1', 'true', 'yes']:
         twitUi_close(browser, p)
     logger.debug("Finished and exiting\n\n")
     print("Finished and exiting")
